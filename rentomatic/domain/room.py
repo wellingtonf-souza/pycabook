@@ -8,3 +8,7 @@ class Room:
     price: int
     longitude: float
     latitude: float
+
+    @classmethod
+    def from_dict(cls, dict_template):
+        return cls(**dict_template)
