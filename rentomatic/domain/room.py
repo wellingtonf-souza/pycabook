@@ -12,3 +12,6 @@ class Room:
     @classmethod
     def from_dict(cls, dict_template):
         return cls(**dict_template)
+
+    def to_dict(self):
+        return dataclasses.asdict(self)
