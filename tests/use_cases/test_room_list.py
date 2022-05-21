@@ -2,7 +2,7 @@ import pytest
 import uuid
 from unittest import mock
 from rentomatic.domain.room import Room
-from rentomatic.requests.room_list import RoomListRequest
+from rentomatic.requests.room_list import build_room_list_request
 from rentomatic.use_cases.room_list import room_list_use_case
 
 @pytest.fixture
@@ -41,7 +41,7 @@ def test_room_list_without_parameters(domain_rooms):
     repo = mock.Mock()
     repo.list.return_value = domain_rooms
 
-    request = RoomListRequest()
+    request = build_room_list_request()
 
     response = room_list_use_case(repo, request)
 
