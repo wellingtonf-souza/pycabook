@@ -1,5 +1,6 @@
 import os
 import json
+import signal
 import subprocess
 import time
 
@@ -12,6 +13,7 @@ from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 def setenv(variable, default):
     os.environ[variable] = os.getenv(variable, default)
 
+setenv("APPLICATION_CONFIG","production")
 
 APPLICATION_CONFIG_PATH = "config"
 DOCKER_PATH = "docker"
@@ -95,6 +97,32 @@ def wait_for_logs(cmdline, message):
         time.sleep(1)
         logs = subprocess.check_output(cmdline)
 
+@cli.command(context_settings={"ignore_unknown_options": True})
+@click.argument("subcommand", nargs=-1, type=click.Path())
+def compose(subcommand):
+    configure_app(os.getenv("APPLICATION_CONFIG"))
+    cmdline = docker_compose_cmdline() + list(subcommand)
+
+    try:
+        p = subprocess.Popen(cmdline)
+        p.wait()
+    except KeyboardInterrupt:
+        p.send_signal(signal.SIGINT)
+        p.wait()
+
+@cli.command()
+def init_postgres():
+    configure_app(os.getenv("APPLICATION_CONFIG"))
+
+    try:
+        run_sql([f"CREATE DATABASE {os.getenv('APPLICATION_DB')}"])
+    except psycopg2.errors.DuplicateDatabase:
+        print(
+            (
+                f"The database {os.getenv('APPLICATION_DB')} already",
+                "exists and will not be recreated",
+            )
+        )
 
 @cli.command()
 @click.argument("args", nargs=-1)
